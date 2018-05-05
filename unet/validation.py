@@ -11,11 +11,15 @@ import base64
 import glob
 import os
 
+import torchvision.utils as vutils
+from tensorboardX import SummaryWriter
 from pycocotools.coco import COCO
 from cocoeval import COCOeval
 
 from torch import nn
 from torch.nn import functional as F
+
+# writer = SummaryWriter()
 
 def validation_binary(model: nn.Module, criterion, valid_loader, num_classes=None):
     model.eval()
@@ -24,7 +28,7 @@ def validation_binary(model: nn.Module, criterion, valid_loader, num_classes=Non
     recs = []
     jaccard = []
 
-    for inputs, targets in valid_loader:
+    for i, (inputs, targets) in enumerate(valid_loader):
         inputs = utils.variable(inputs, volatile=True)
         targets = utils.variable(targets)
         outputs = model(inputs)
@@ -32,6 +36,9 @@ def validation_binary(model: nn.Module, criterion, valid_loader, num_classes=Non
         # prec, rec = calc_coco_metric(targets, outputs)
         # accs.append(prec)
         # recs.append(rec)
+        if i % 10 != 0:
+            x = vutils.make_grid(outputs.data, normalize=True, scale_each=True)
+            # writer.add_image('Image', x, i)
         losses.append(loss.data[0])
         jaccard += [get_jaccard(targets, (outputs > 0).float()).data[0]]
 
@@ -39,7 +46,6 @@ def validation_binary(model: nn.Module, criterion, valid_loader, num_classes=Non
     # valid_rec = np.mean(recs)
     # valid_prec = np.mean(prec)
     valid_jaccard = np.mean(jaccard)
-
     print('Valid loss: {:.5f}, jaccard: {:.5f}'.format(valid_loss, valid_jaccard))
     # print("Average Precision : {:.5f} || Average Recall : {:.5f}".format(valid_prec, valid_rec))
 

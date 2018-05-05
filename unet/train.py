@@ -1,14 +1,15 @@
 import argparse
 import json
 from pathlib import Path
-
-
+#
+#
 import torch
 from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 import torch.backends.cudnn
+
 
 from unet_models import TernausNet34, UNet11, UNet16
 from validation import validation_binary, validation_multi
@@ -48,7 +49,7 @@ def main():
     arg('--device-ids', type=str, default='0', help='For example 0,1 to run on two GPUs')
     arg('--fold', type=int, help='fold', default=0)
     arg('--root', default='runs/debug', help='checkpoint root')
-    arg('--batch-size', type=int, default=1)
+    arg('--batch-size', type=int, default=2)
     arg('--n-epochs', type=int, default=700)
     arg('--lr', type=float, default=0.0001)
     arg('--workers', type=int, default=8)

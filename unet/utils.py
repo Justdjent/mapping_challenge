@@ -2,13 +2,16 @@ import json
 from datetime import datetime
 from pathlib import Path
 import copy
+from tensorboardX import SummaryWriter
 
 import random
 import numpy as np
 
 import torch
 from torch.autograd import Variable
+import torchvision.utils as vutils
 import tqdm
+
 
 
 def variable(x, volatile=False):
@@ -22,6 +25,7 @@ def cuda(x):
 
 
 def write_event(log, step: int, **data):
+
     data['step'] = step
     data['dt'] = datetime.now().isoformat()
     log.write(json.dumps(data, sort_keys=True))
@@ -33,7 +37,7 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
     lr = args.lr
     n_epochs = n_epochs or args.n_epochs
     optimizer = init_optimizer(lr)
-
+    # writer = SummaryWriter()
     root = Path(args.root)
     model_path = root / 'model_{fold}.pt'.format(fold=fold)
     best_model_path = root / 'best_model_{fold}.pt'.format(fold=fold)
@@ -76,6 +80,7 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
                 inputs, targets = variable(inputs), variable(targets)
                 outputs = model(inputs)
                 loss = criterion(outputs, targets)
+
                 optimizer.zero_grad()
                 batch_size = inputs.size(0)
                 loss.backward()
@@ -87,10 +92,14 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
                 tq.set_postfix(loss='{:.5f}'.format(mean_loss))
                 if i and i % report_each == 0:
                     write_event(log, step, loss=mean_loss)
+                    # writer.add_scalar('runs/tensorboard', mean_loss, step)
+            # writer.add_scalar('runs/mean_loss', mean_loss, step)
             write_event(log, step, loss=mean_loss)
             tq.close()
             save(epoch + 1)
             valid_metrics = validation(model, criterion, valid_loader, num_classes)
+            # writer.add_scalar('runs/valid_loss', valid_metrics['valid_loss'], step)
+            # writer.add_scalar('runs/jaccard_loss', valid_metrics['jaccard_loss'], step)
             write_event(log, step, **valid_metrics)
             valid_loss = valid_metrics['valid_loss']
             if valid_loss < min_val_loss:

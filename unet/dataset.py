@@ -35,7 +35,7 @@ class MapDataset(Dataset):
 
     def __len__(self):
         return len(self.image_ids)
-        # return 1
+        # return 2
 
     def __getitem__(self, idx):
         # print(self.file_names)
