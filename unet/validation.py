@@ -10,6 +10,7 @@ import argparse
 import base64
 import glob
 import os
+import matplotlib.pyplot as plt
 
 import torchvision.utils as vutils
 from tensorboardX import SummaryWriter
@@ -21,14 +22,14 @@ from torch.nn import functional as F
 
 # writer = SummaryWriter()
 
-def validation_binary(model: nn.Module, criterion, valid_loader, num_classes=None):
+def validation_binary(model: nn.Module, criterion, valid_loader, epoch, num_classes=None):
     model.eval()
     losses = []
     accs = []
     recs = []
     jaccard = []
 
-    for i, (inputs, targets) in enumerate(valid_loader):
+    for i, (inputs, targets, idx) in enumerate(valid_loader):
         inputs = utils.variable(inputs, volatile=True)
         targets = utils.variable(targets)
         outputs = model(inputs)
@@ -36,11 +37,12 @@ def validation_binary(model: nn.Module, criterion, valid_loader, num_classes=Non
         # prec, rec = calc_coco_metric(targets, outputs)
         # accs.append(prec)
         # recs.append(rec)
-        if i % 10 != 0:
-            x = vutils.make_grid(outputs.data, normalize=True, scale_each=True)
+        # if i % 10 != 0:
+        #     x = vutils.make_grid(outputs.data, normalize=True, scale_each=True)
             # writer.add_image('Image', x, i)
+        save_valid_results(inputs, targets, outputs, idx, epoch)
         losses.append(loss.data[0])
-        jaccard += [get_jaccard(targets, (outputs > 0).float()).data[0]]
+        jaccard += [get_jaccard( targets, (outputs > 0).float()).data[0]]
 
     valid_loss = np.mean(losses)  # type: float
     # valid_rec = np.mean(recs)
@@ -274,3 +276,12 @@ def calc_coco_metric(targets, outputs):
 #     for _idx in range(number_of_annotations):
 #         _annotation = single_annotation(image_id)
 #         predictions.append(_annotation)
+def save_valid_results(inputs, targets, outputs, idx, epoch):
+    fig = plt.figure(figsize=(10, 10))
+    fig.add_subplot(1, 3, 1)
+    plt.imshow(inputs[0][0].data.numpy())
+    fig.add_subplot(1, 3, 2)
+    plt.imshow(targets[0][0].data.numpy())
+    fig.add_subplot(1, 3, 3)
+    plt.imshow(outputs[0][0].data.numpy())
+    plt.savefig('runs/valid_res/{}_{}.jpg'.format(idx, epoch))

@@ -23,6 +23,12 @@ from sklearn.model_selection import train_test_split
 
 from transforms import (DualCompose,
                         OneOf,
+                        OneOrOther,
+                        Transpose,
+                        Distort1,
+                        Distort2,
+                        RandomFilter,
+                        RandomFlip,
                         ImageOnly,
                         Normalize,
                         HorizontalFlip,
@@ -32,7 +38,8 @@ from transforms import (DualCompose,
                         ShiftScaleRotate,
                         RandomHueSaturationValue,
                         RandomBrightness,
-                        RandomContrast)
+                        RandomContrast,
+                        augment)
 
 TRAIN_ANNOTATIONS_PATH = "../mapping-challenge-starter-kit/data/train/annotation.json"
 TRAIN_ANNOTATIONS_SMALL_PATH = "../mapping-challenge-starter-kit/data/train/annotation-small.json"
@@ -49,7 +56,7 @@ def main():
     arg('--device-ids', type=str, default='0', help='For example 0,1 to run on two GPUs')
     arg('--fold', type=int, help='fold', default=0)
     arg('--root', default='runs/debug', help='checkpoint root')
-    arg('--batch-size', type=int, default=2)
+    arg('--batch-size', type=int, default=1)
     arg('--n-epochs', type=int, default=700)
     arg('--lr', type=float, default=0.0001)
     arg('--workers', type=int, default=8)
@@ -102,15 +109,31 @@ def main():
 
     # print('num train = {}, num_val = {}'.format(len(train_file_names), len(val_file_names)))
 
+    # train_transform = DualCompose([
+    #     HorizontalFlip(),
+    #     VerticalFlip(),
+    #     RandomCrop([256, 256]),
+    #     RandomRotate90(),
+    #     ShiftScaleRotate(),
+    #     ImageOnly(RandomHueSaturationValue()),
+    #     ImageOnly(RandomBrightness()),
+    #     ImageOnly(RandomContrast()),
+    #     ImageOnly(Normalize())
+    # ])
     train_transform = DualCompose([
-        HorizontalFlip(),
-        VerticalFlip(),
-        RandomCrop([256, 256]),
+        OneOrOther(
+            *(OneOf([
+                Distort1(distort_limit=0.05, shift_limit=0.05),
+                Distort2(num_steps=2, distort_limit=0.05)]),
+              ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.10, rotate_limit=45)), prob=0.5),
         RandomRotate90(),
-        ShiftScaleRotate(),
-        ImageOnly(RandomHueSaturationValue()),
+        RandomCrop([256, 256]),
+        RandomFlip(prob=0.5),
+        Transpose(prob=0.5),
+        ImageOnly(RandomContrast(limit=0.2, prob=0.5)),
+        ImageOnly(RandomFilter(limit=0.5, prob=0.2)),
+        ImageOnly(RandomHueSaturationValue(prob=0.2)),
         ImageOnly(RandomBrightness()),
-        ImageOnly(RandomContrast()),
         ImageOnly(Normalize())
     ])
 

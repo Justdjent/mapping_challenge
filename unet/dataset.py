@@ -34,8 +34,8 @@ class MapDataset(Dataset):
         self.image_ids = self.coco.getImgIds(catIds=self.coco.getCatIds())
 
     def __len__(self):
-        return len(self.image_ids)
-        # return 2
+        # return len(self.image_ids)
+        return 2
 
     def __getitem__(self, idx):
         # print(self.file_names)
@@ -48,11 +48,13 @@ class MapDataset(Dataset):
         pic = load_image(img, self.mode)
         mask = load_mask(annotations, img)
         pic, mask = self.transform(pic, mask)
-
-        if self.problem_type == 'binary':
+        # plot_aug(pic, mask)
+        if self.problem_type == 'binary' and self.mode == 'train':
             return to_float_tensor(pic),\
                    torch.from_numpy(np.expand_dims(mask, 0)).float()
-
+        elif self.problem_type == 'binary' and self.mode == 'valid':
+            return to_float_tensor(pic),\
+                   torch.from_numpy(np.expand_dims(mask, 0)).float(), idx
         else:
             # return to_float_tensor(img), torch.from_numpy(mask).long()
             return to_float_tensor(img), to_float_tensor(mask)
@@ -108,3 +110,14 @@ def load_mask(annotations, img):
     # mask[:, :, 2] = border
 
     return mask.astype(np.uint8)
+
+def plot_aug(pic, mask):
+    fig = plt.figure(figsize=(8, 8))
+    fig.add_subplot(1, 2, 1)
+    plt.imshow(pic)
+    fig.add_subplot(1, 2, 2)
+    plt.imshow(mask)
+    # plt.imshow(pic)
+    # plt.imshow(mask)
+    plt.show()
+
