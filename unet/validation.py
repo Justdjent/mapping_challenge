@@ -3,6 +3,16 @@ import utils
 import json
 from pycocotools import mask
 from skimage import measure
+import random
+import json
+import numpy as np
+import argparse
+import base64
+import glob
+import os
+
+from pycocotools.coco import COCO
+from cocoeval import COCOeval
 
 from torch import nn
 from torch.nn import functional as F
@@ -10,7 +20,8 @@ from torch.nn import functional as F
 def validation_binary(model: nn.Module, criterion, valid_loader, num_classes=None):
     model.eval()
     losses = []
-
+    accs = []
+    recs = []
     jaccard = []
 
     for inputs, targets in valid_loader:
@@ -18,15 +29,24 @@ def validation_binary(model: nn.Module, criterion, valid_loader, num_classes=Non
         targets = utils.variable(targets)
         outputs = model(inputs)
         loss = criterion(outputs, targets)
+        # prec, rec = calc_coco_metric(targets, outputs)
+        # accs.append(prec)
+        # recs.append(rec)
         losses.append(loss.data[0])
         jaccard += [get_jaccard(targets, (outputs > 0).float()).data[0]]
 
     valid_loss = np.mean(losses)  # type: float
-
+    # valid_rec = np.mean(recs)
+    # valid_prec = np.mean(prec)
     valid_jaccard = np.mean(jaccard)
 
     print('Valid loss: {:.5f}, jaccard: {:.5f}'.format(valid_loss, valid_jaccard))
+    # print("Average Precision : {:.5f} || Average Recall : {:.5f}".format(valid_prec, valid_rec))
+
     metrics = {'valid_loss': valid_loss, 'jaccard_loss': valid_jaccard}
+    # metrics = {'valid_loss': valid_loss, 'jaccard_loss': valid_jaccard,
+    #            'average_precision': valid_prec, 'average_recall': valid_rec}
+
     return metrics
 
 
@@ -193,7 +213,7 @@ def convert_bin_coco(in_mask, image_id):
     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=np.uint8)
 
-    fortran_ground_truth_binary_mask = np.asfortranarray(in_mask)
+    fortran_ground_truth_binary_mask = np.asfortranarray(in_mask.astype(np.uint8))
     encoded_ground_truth = mask.encode(fortran_ground_truth_binary_mask)
     ground_truth_area = mask.area(encoded_ground_truth)
     ground_truth_bounding_box = mask.toBbox(encoded_ground_truth)
@@ -216,6 +236,22 @@ def convert_bin_coco(in_mask, image_id):
     # print(json.dumps(annotation, indent=4))
     return annotation
 
+def calc_coco_metric(targets, outputs):
+    annotations_gt = []
+    annotations_r = []
+    for id, m in enumerate(range(targets.shape[0])):
+        annotations_gt.append(convert_bin_coco(targets.data.numpy()[m][0], id))
+        annotations_r.append(convert_bin_coco(outputs.data.numpy()[m][0], id))
+
+    ground_truth_annotations = COCO(annotations_gt)
+    results = ground_truth_annotations.loadRes(annotations_r)
+    cocoEval = COCOeval(ground_truth_annotations, results, 'segm')
+    cocoEval.evaluate()
+    cocoEval.accumulate()
+    average_precision = cocoEval._summarize(ap=1, iouThr=0.5, areaRng="all", maxDets=100)
+    average_recall = cocoEval._summarize(ap=0, iouThr=0.5, areaRng="all", maxDets=100)
+    # print("Average Precision : {} || Average Recall : {}".format(average_precision, average_recall))
+    return average_precision, average_recall
 # def single_annotation(image_id, number_of_points=10):
 #     _result = {}
 #     _result["image_id"] = image_id
