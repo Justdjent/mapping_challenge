@@ -39,6 +39,7 @@ from transforms import (DualCompose,
                         RandomHueSaturationValue,
                         RandomBrightness,
                         RandomContrast,
+                        Rescale,
                         augment)
 
 TRAIN_ANNOTATIONS_PATH = "../mapping-challenge-starter-kit/data/train/annotation.json"
@@ -56,9 +57,9 @@ def main():
     arg('--device-ids', type=str, default='0', help='For example 0,1 to run on two GPUs')
     arg('--fold', type=int, help='fold', default=0)
     arg('--root', default='runs/debug', help='checkpoint root')
-    arg('--batch-size', type=int, default=1)
+    arg('--batch-size', type=int, default=2)
     arg('--n-epochs', type=int, default=700)
-    arg('--lr', type=float, default=0.0001)
+    arg('--lr', type=float, default=0.00001)
     arg('--workers', type=int, default=8)
     arg('--type', type=str, default='binary', choices=['binary', 'parts', 'instruments'])
     arg('--model', type=str, default='TernausNet', choices=['UNet', 'UNet11', 'LinkNet34', 'TernausNet'])
@@ -138,7 +139,8 @@ def main():
     ])
 
     val_transform = DualCompose([
-        RandomCrop([256, 256]),
+        # RandomCrop([256, 256]),
+        Rescale([256, 256]),
         ImageOnly(Normalize())
     ])
 

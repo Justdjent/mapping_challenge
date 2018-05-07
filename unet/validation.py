@@ -40,7 +40,7 @@ def validation_binary(model: nn.Module, criterion, valid_loader, epoch, num_clas
         # if i % 10 != 0:
         #     x = vutils.make_grid(outputs.data, normalize=True, scale_each=True)
             # writer.add_image('Image', x, i)
-        save_valid_results(inputs, targets, outputs, idx, epoch)
+        save_valid_results(inputs, targets, outputs, idx[0], epoch)
         losses.append(loss.data[0])
         jaccard += [get_jaccard( targets, (outputs > 0).float()).data[0]]
 
@@ -279,9 +279,10 @@ def calc_coco_metric(targets, outputs):
 def save_valid_results(inputs, targets, outputs, idx, epoch):
     fig = plt.figure(figsize=(10, 10))
     fig.add_subplot(1, 3, 1)
-    plt.imshow(inputs[0][0].data.numpy())
+    plt.imshow(inputs[0][0].data.cpu().numpy())
     fig.add_subplot(1, 3, 2)
-    plt.imshow(targets[0][0].data.numpy())
+    plt.imshow(targets[0][0].data.cpu().numpy())
     fig.add_subplot(1, 3, 3)
-    plt.imshow(outputs[0][0].data.numpy())
+    plt.imshow(outputs[0][0].data.cpu().numpy())
     plt.savefig('runs/valid_res/{}_{}.jpg'.format(idx, epoch))
+    plt.close()

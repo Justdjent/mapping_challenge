@@ -175,13 +175,13 @@ class Rescale:
         # h_start = np.random.randint(0, height - self.h)
         # w_start = np.random.randint(0, width - self.w)
 
-        img = cv2.resize(img, (self.h, self.w), cv2.INTER_CUBIC)
+        img = cv2.resize(img, (self.h, self.w), cv2.INTER_NEAREST)
 
         # assert img.shape[0] == self.h
         # assert img.shape[1] == self.w
 
         if mask is not None:
-            mask = cv2.resize(mask, (self.h, self.w), cv2.INTER_CUBIC)
+            mask = cv2.resize(mask, (self.h, self.w), cv2.INTER_NEAREST)
 
         return img, mask
 

@@ -62,7 +62,7 @@ class LossMulti:
                 union = jaccard_output.sum() + jaccard_target.sum() + eps
                 # print(cls_weight)
                 # loss += (1 - intersection / (union - intersection)) * cls_weight
-                loss += torch.log(1 - 2 * intersection / union)  * cls_weight
+                loss += torch.log(1 - 2 * intersection / union) * cls_weight
 
             # loss /= (1 + self.jaccard_weight)
         return loss
