@@ -10,6 +10,10 @@ import argparse
 import base64
 import glob
 import os
+# import matplotlib.pyplot as plt
+
+import matplotlib
+matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import matplotlib.pyplot as plt
 
 import torchvision.utils as vutils
@@ -40,7 +44,8 @@ def validation_binary(model: nn.Module, criterion, valid_loader, epoch, num_clas
         # if i % 10 != 0:
         #     x = vutils.make_grid(outputs.data, normalize=True, scale_each=True)
             # writer.add_image('Image', x, i)
-        save_valid_results(inputs, targets, outputs, idx[0], epoch)
+        if not idx[0] % 10:
+            save_valid_results(inputs, targets, outputs, idx[0], epoch)
         losses.append(loss.data[0])
         jaccard += [get_jaccard( targets, (outputs > 0).float()).data[0]]
 
@@ -51,7 +56,7 @@ def validation_binary(model: nn.Module, criterion, valid_loader, epoch, num_clas
     print('Valid loss: {:.5f}, jaccard: {:.5f}'.format(valid_loss, valid_jaccard))
     # print("Average Precision : {:.5f} || Average Recall : {:.5f}".format(valid_prec, valid_rec))
 
-    metrics = {'valid_loss': valid_loss, 'jaccard_loss': valid_jaccard}
+    metrics = {'valid_loss': valid_loss.astype(np.float64), 'jaccard_loss': valid_jaccard.astype(np.float64)}
     # metrics = {'valid_loss': valid_loss, 'jaccard_loss': valid_jaccard,
     #            'average_precision': valid_prec, 'average_recall': valid_rec}
 

@@ -57,9 +57,9 @@ def main():
     arg('--device-ids', type=str, default='0', help='For example 0,1 to run on two GPUs')
     arg('--fold', type=int, help='fold', default=0)
     arg('--root', default='runs/debug', help='checkpoint root')
-    arg('--batch-size', type=int, default=2)
-    arg('--n-epochs', type=int, default=700)
-    arg('--lr', type=float, default=0.00001)
+    arg('--batch-size', type=int, default=8)
+    arg('--n-epochs', type=int, default=14)
+    arg('--lr', type=float, default=0.000001)
     arg('--workers', type=int, default=8)
     arg('--type', type=str, default='binary', choices=['binary', 'parts', 'instruments'])
     arg('--model', type=str, default='TernausNet', choices=['UNet', 'UNet11', 'LinkNet34', 'TernausNet'])
@@ -144,8 +144,8 @@ def main():
         ImageOnly(Normalize())
     ])
 
-    train_loader = make_loader(TRAIN_ANNOTATIONS_SMALL_PATH, shuffle=True, transform=train_transform, problem_type=args.type)
-    valid_loader = make_loader(VAL_ANNOTATIONS_SMALL_PATH, transform=val_transform, mode='valid', problem_type=args.type)
+    train_loader = make_loader(TRAIN_ANNOTATIONS_PATH, shuffle=True, transform=train_transform, problem_type=args.type)
+    valid_loader = make_loader(VAL_ANNOTATIONS_PATH, transform=val_transform, mode='valid', problem_type=args.type)
 
     root.joinpath('params.json').write_text(
         json.dumps(vars(args), indent=True, sort_keys=True))

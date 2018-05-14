@@ -34,10 +34,10 @@ class MapDataset(Dataset):
         self.image_ids = self.coco.getImgIds(catIds=self.coco.getCatIds())
 
     def __len__(self):
-        if self.mode == 'valid':
-            return len(self.image_ids)
-        else:
-            return 2
+        # if self.mode == 'valid':
+        return len(self.image_ids)
+        # else:
+        #     return 2
 
     def __getitem__(self, idx):
         # print(self.file_names)
