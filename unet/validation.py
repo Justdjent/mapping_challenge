@@ -21,6 +21,8 @@ from tensorboardX import SummaryWriter
 from pycocotools.coco import COCO
 from cocoeval import COCOeval
 
+from pycocotools import mask as cocomask
+from skimage import measure
 from torch import nn
 from torch.nn import functional as F
 
@@ -227,9 +229,9 @@ def convert_bin_coco(in_mask, image_id):
     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=np.uint8)
 
     fortran_ground_truth_binary_mask = np.asfortranarray(in_mask.astype(np.uint8))
-    encoded_ground_truth = mask.encode(fortran_ground_truth_binary_mask)
-    ground_truth_area = mask.area(encoded_ground_truth)
-    ground_truth_bounding_box = mask.toBbox(encoded_ground_truth)
+    encoded_ground_truth = cocomask.encode(fortran_ground_truth_binary_mask)
+    ground_truth_area = cocomask.area(encoded_ground_truth)
+    ground_truth_bounding_box = cocomask.toBbox(encoded_ground_truth)
     contours = measure.find_contours(in_mask, 0.5)
     annotation = {
         # "id": id,
@@ -286,8 +288,8 @@ def save_valid_results(inputs, targets, outputs, idx, epoch):
     fig.add_subplot(1, 3, 1)
     plt.imshow(inputs[0][0].data.cpu().numpy())
     fig.add_subplot(1, 3, 2)
-    plt.imshow(targets[0][0].data.cpu().numpy())
+    plt.imshow(targets[0][0].data.cpu().numpy(), 'gray')
     fig.add_subplot(1, 3, 3)
-    plt.imshow(outputs[0][0].data.cpu().numpy())
+    plt.imshow(outputs[0][0].data.cpu().numpy(), 'gray')
     plt.savefig('runs/valid_res/{}_{}.jpg'.format(idx, epoch))
     plt.close()

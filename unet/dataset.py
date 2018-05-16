@@ -57,6 +57,9 @@ class MapDataset(Dataset):
         elif self.problem_type == 'binary' and self.mode == 'valid':
             return to_float_tensor(pic),\
                    torch.from_numpy(np.expand_dims(mask, 0)).float(), idx
+        elif self.problem_type == 'binary' and self.mode == 'predict':
+            return to_float_tensor(pic),\
+                   torch.from_numpy(np.expand_dims(mask, 0)).float(), idx
         else:
             # return to_float_tensor(img), torch.from_numpy(mask).long()
             return to_float_tensor(img), to_float_tensor(mask)
