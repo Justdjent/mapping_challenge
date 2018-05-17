@@ -236,11 +236,12 @@ def convert_bin_coco(in_mask, image_id):
     annotation = {
         # "id": id,
         "segmentation": [],
-        "area": ground_truth_area.tolist(),
-        "iscrowd": False,
+        # "area": ground_truth_area.tolist(),
+        # "iscrowd": False,
         "image_id": image_id,
         "bbox": ground_truth_bounding_box.tolist(),
         "category_id": 100,
+        "score": np.random.rand()
     }
 
     for contour in contours:
