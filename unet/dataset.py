@@ -116,6 +116,42 @@ def load_mask(annotations, img):
 
     return mask.astype(np.uint8)
 
+class MapDatasetTest(Dataset):
+    def __init__(self, file_names: str, to_augment=False, transform=None, mode='predict', problem_type=None):
+        self.file_names = file_names
+        self.to_augment = to_augment
+        self.transform = transform
+        self.mode = mode
+        self.problem_type = problem_type
+
+    def __len__(self):
+        # if self.mode == 'valid':
+        return len(self.file_names)
+        # else:
+        #     return 2
+
+    def __getitem__(self, idx):
+
+        # print(self.file_names)
+        # print(idx)
+        # print(self.file_names[idx], len(self.file_names), idx)
+        img_file_name = self.file_names[idx]
+        img = load_image_test(img_file_name)
+        # mask = None
+        img, mask = self.transform(img, None)
+        return to_float_tensor(img), img_file_name
+
+def load_image_test(img):
+    # path_ = "data/stage1_train_/{}/images/{}.png".format(path, path)
+        # path_ = "data/stage1_test/{}/images/{}.png".format(path, path)
+    path_ = "../mapping-challenge-starter-kit/data/test_images/{}".format(img)
+    if not os.path.isfile(path_):
+        print('{} was empty'.format(path_))
+    I = io.imread(path_)
+    # I1 = cv2.imread(image_path)
+    # print(path_, img.shape)
+    return I
+
 def plot_aug(pic, mask):
     fig = plt.figure(figsize=(8, 8))
     fig.add_subplot(1, 2, 1)
