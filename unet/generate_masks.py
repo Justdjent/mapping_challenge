@@ -90,8 +90,9 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
             # print(outputs[i][0].shape)
             # for j in range(3):
             #     if problem_type == 'binary':
-            factor = prepare_data.binary_factor
-            t_mask = (F.sigmoid(outputs[i, 0]).data.cpu().numpy()).astype(np.uint8)
+            # factor = prepare_data.binary_factor
+            # t_mask = (F.sigmoid(outputs[i, 0]).data.cpu().numpy()).astype(np.uint8)
+            t_mask = (outputs > 0.5).float()[0][0].data.cpu().numpy()
                 # elif problem_type == 'parts':
                 #     # factor = prepare_data.parts_factor
                 #     factor = 255
@@ -110,7 +111,7 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
 
             to_path.mkdir(exist_ok=True, parents=True)
 
-            cv2.imwrite(str(to_path / image_name), full_mask)
+            cv2.imwrite(str(to_path / image_name), (full_mask * 255).astype(np.uint8))
             ann = convert_bin_coco(full_mask, image_name.split('.')[0])
             anns.append(ann)
 
@@ -132,7 +133,7 @@ if __name__ == '__main__':
     arg('--model_type', type=str, default='UNet11', help='network architecture',
         choices=['UNet', 'UNet11', 'UNet16', 'LinkNet34'])
     arg('--output_path', type=str, help='path to save images', default='output/mask_test_2')
-    arg('--batch-size', type=int, default=16)
+    arg('--batch-size', type=int, default=1)
     arg('--fold', type=int, default=0, choices=[0, 1, 2, 3, -1], help='-1: all folds')
     arg('--problem_type', type=str, default='parts', choices=['binary', 'parts', 'instruments'])
     arg('--workers', type=int, default=4)
