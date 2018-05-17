@@ -239,16 +239,17 @@ def convert_bin_coco(in_mask, image_id):
         # "area": ground_truth_area.tolist(),
         # "iscrowd": False,
         "image_id": int(image_id),
-        "bbox": ground_truth_bounding_box.tolist(),
+        "bbox": np.array(ground_truth_bounding_box.tolist()),
         "category_id": 100,
-        "score": np.random.rand()
+        "score": 0.5
     }
 
     for contour in contours:
         contour = np.flip(contour, axis=1)
         segmentation = contour.ravel().tolist()
         annotation["segmentation"].append(segmentation)
-
+        
+    annotation['segmentation'] = np.array(annotation['segmentation'])
     # print(json.dumps(annotation, indent=4))
     return annotation
 
