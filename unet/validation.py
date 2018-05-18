@@ -221,16 +221,16 @@ def convert_bin_coco(in_mask, image_id):
     # encoded_ground_truth = maskUtils(fortran_ground_truth_binary_mask)
     encoded_ = cocomask.encode(fortran_binary_mask)
     ground_truth_bounding_box = cocomask.toBbox(encoded_)
-    contours = measure.find_contours(in_mask, 0.5)
+    # contours = measure.find_contours(in_mask, 0.5)
     encoded_["counts"] = encoded_["counts"].decode("UTF-8")
     # _result["segmentation"] = _mask
-    
+
     annotation = {
         "segmentation": encoded_,
         "image_id": int(image_id),
         "bbox": np.around(ground_truth_bounding_box.tolist()).tolist(),
         "category_id": 100,
-        "score": 0.5,
+        "score": 1,
     }
 
     # for contour in contours:
@@ -241,40 +241,63 @@ def convert_bin_coco(in_mask, image_id):
     # annotation['segmentation'] = annotation['segmentation']
     return annotation
 
-# def conv_bin_coco_(in_mask, image_id):
-#     mask = in_mask.astype(np.uint8)
-#     bbox = np.around(r["rois"][_idx], 1)
-#     bbox = [float(x) for x in bbox]
-#     _result = {}
-#     _result["image_id"] = image_id
-#     _result["category_id"] = 100
-#     _result["score"] = float(0.5)
-#     _mask = cocomask.encode(np.asfortranarray(mask))
-#     _mask["counts"] = _mask["counts"].decode("UTF-8")
-#     _result["segmentation"] = _mask
-#     _result["bbox"] = [bbox[1], bbox[0], bbox[3] - bbox[1], bbox[2] - bbox[0]]
-#     _final_object.append(_result)
-#
-# def convert_bin_coco(in_mask, image_id):
-#
-#     # fortran_ground_truth_binary_mask = np.asfortranarray(in_mask.astype(np.uint8))
-#     # encoded_ground_truth = cocomask.encode(fortran_ground_truth_binary_mask)
-#     contours = measure.find_contours(in_mask, 0.5)
-#     annotation = {
-#         "segmentation": [],
-#         "image_id": image_id,
-#         "bbox": [],
-#         "category_id": 100,
-#         "score": 0.5
-#     }
-#
-#     for contour in contours:
-#         contour = np.flip(contour, axis=1)
-#         segmentation = contour.ravel().tolist()
-#         annotation["segmentation"].append(segmentation)
-#         annotation['bbox'].append(bounding_box_from_points(segmentation))
-#     # print(json.dumps(annotation, indent=4))
-#     return annotation
+def create_annotations(meta, predictions, logger, category_ids, save=True, experiment_dir='./'):
+    '''
+    :param meta: pd.DataFrame with metadata
+    :param predictions: list of labeled masks or numpy array of size [n_images, im_height, im_width]
+    :param logger:
+    :param save: True, if one want to save submission, False if one want to return it
+    :param experiment_dir: path to save submission
+    :return: submission if save==False else True
+    '''
+    annotations = []
+    logger.info('Creating submission')
+    for image_id, prediction in zip(meta["ImageId"].values, predictions):
+        score = 1.0
+        for category_nr, category_instances in enumerate(prediction):
+            if category_ids[category_nr] != None:
+                masks = decompose(category_instances)
+                for mask_nr, mask in enumerate(masks):
+                    annotation = {}
+                    annotation["image_id"] = int(image_id)
+                    annotation["category_id"] = category_ids[category_nr]
+                    annotation["score"] = score
+                    annotation["segmentation"] = rle_from_binary(mask.astype('uint8'))
+                    annotation['segmentation']['counts'] = annotation['segmentation']['counts'].decode("UTF-8")
+                    annotation["bbox"] = bounding_box_from_rle(rle_from_binary(mask.astype('uint8')))
+                    annotations.append(annotation)
+    if save:
+        submission_filepath = os.path.join(experiment_dir, 'submission.json')
+        with open(submission_filepath, "w") as fp:
+            fp.write(str(json.dumps(annotations)))
+            logger.info("Submission saved to {}".format(submission_filepath))
+            logger.info('submission head \n\n{}'.format(annotations[0]))
+        return True
+    else:
+        return annotations
+
+
+def rle_from_binary(prediction):
+    prediction = np.asfortranarray(prediction)
+    return cocomask.encode(prediction)
+
+
+def bounding_box_from_rle(rle):
+    return list(cocomask.toBbox(rle))
+
+def decompose(labeled):
+    nr_true = labeled.max()
+    masks = []
+    for i in range(1, min(nr_true + 1, 20)):
+        msk = labeled.copy()
+        msk[msk != i] = 0.
+        msk[msk == i] = 255.
+        masks.append(msk)
+
+    if not masks:
+        return [labeled]
+    else:
+        return masks
 
 def calc_coco_metric(targets, outputs):
     annotations_gt = []

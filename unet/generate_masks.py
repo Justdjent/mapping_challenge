@@ -92,7 +92,7 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
             #     if problem_type == 'binary':
             # factor = prepare_data.binary_factor
             # t_mask = (F.sigmoid(outputs[i, 0]).data.cpu().numpy()).astype(np.uint8)
-            t_mask = (outputs > 0.5).float()[0][0].data.cpu().numpy()
+            t_mask = (outputs > 0).float()[0][0].data.cpu().numpy()
                 # elif problem_type == 'parts':
                 #     # factor = prepare_data.parts_factor
                 #     factor = 255
@@ -106,13 +106,13 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
 
                 # full_mask = np.zeros((original_height, original_width))
                 # full_mask[h_start:h_start + h, w_start:w_start + w] = t_mask
-            full_mask = cv2.resize(t_mask, (300,300), cv2.INTER_NEAREST)
+            full_mask = cv2.resize(t_mask, (300, 300), cv2.INTER_NEAREST)
             # instrument_folder = Path(paths[i]).parent.parent.name
 
             to_path.mkdir(exist_ok=True, parents=True)
 
             cv2.imwrite(str(to_path / image_name), (full_mask * 255).astype(np.uint8))
-            ann = convert_bin_coco(full_mask, image_name.split('.')[0])
+            ann = convert_bin_coco(full_mask * 255, image_name.split('.')[0])
             anns.append(ann)
 
 
