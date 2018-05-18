@@ -239,7 +239,7 @@ def convert_bin_coco(in_mask, image_id):
         # "area": ground_truth_area.tolist(),
         # "iscrowd": False,
         "image_id": int(image_id),
-        "bbox": np.array(ground_truth_bounding_box.tolist()),
+        "bbox": ground_truth_bounding_box.tolist(),
         "category_id": 100,
         "score": 0.5
     }
