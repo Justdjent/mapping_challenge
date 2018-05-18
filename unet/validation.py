@@ -222,20 +222,23 @@ def convert_bin_coco(in_mask, image_id):
     encoded_ = cocomask.encode(fortran_binary_mask)
     ground_truth_bounding_box = cocomask.toBbox(encoded_)
     contours = measure.find_contours(in_mask, 0.5)
+    encoded_["counts"] = encoded_["counts"].decode("UTF-8")
+    # _result["segmentation"] = _mask
+    
     annotation = {
-        "segmentation": [],
+        "segmentation": encoded_,
         "image_id": int(image_id),
-        "bbox": ground_truth_bounding_box.tolist(),
+        "bbox": np.around(ground_truth_bounding_box.tolist()).tolist(),
         "category_id": 100,
-        "score": 0.5
+        "score": 0.5,
     }
 
-    for contour in contours:
-        contour = np.flip(contour, axis=1)
-        segmentation = contour.ravel().tolist()
-        annotation["segmentation"].append(segmentation)
-
-    annotation['segmentation'] = annotation['segmentation']
+    # for contour in contours:
+    #     contour = np.flip(contour, axis=1)
+    #     segmentation = contour.ravel().tolist()
+    #     annotation["segmentation"].append(segmentation)
+    #
+    # annotation['segmentation'] = annotation['segmentation']
     return annotation
 
 # def conv_bin_coco_(in_mask, image_id):
