@@ -112,7 +112,7 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
             to_path.mkdir(exist_ok=True, parents=True)
 
             cv2.imwrite(str(to_path / image_name), (full_mask * 255).astype(np.uint8))
-            ann = convert_bin_coco(full_mask * 255, image_name.split('.')[0])
+            ann = convert_bin_coco(full_mask, image_name.split('.')[0])
             anns.append(ann)
 
 
@@ -154,7 +154,7 @@ if __name__ == '__main__':
             output_path.mkdir(exist_ok=True, parents=True)
 
             predict(model, file_names, args.batch_size, output_path, problem_type=args.problem_type)
-            submit()
+            # submit()
     else:
         file_names = os.listdir("../mapping-challenge-starter-kit/data/test_images")
         # file_names = os.listdir('data/stage1_test')
@@ -168,7 +168,7 @@ if __name__ == '__main__':
         output_path.mkdir(exist_ok=True, parents=True)
 
         predict(model, file_names, args.batch_size, output_path, problem_type=args.problem_type)
-        submit()
+        # submit()
         # imgs = os.listdir('data/stage1_test/')
         # [join_mask(128, img, 'output/mask/', 'output/joined_mask/', '0') for img in imgs]
         # utils.watershed()
