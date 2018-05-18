@@ -248,10 +248,47 @@ def convert_bin_coco(in_mask, image_id):
         contour = np.flip(contour, axis=1)
         segmentation = contour.ravel().tolist()
         annotation["segmentation"].append(segmentation)
-        
-    annotation['segmentation'] = np.array(annotation['segmentation'])
+
+    annotation['segmentation'] = annotation['segmentation']
     # print(json.dumps(annotation, indent=4))
     return annotation
+
+# def convert_bin_coco_one(in_mask, image_id):
+#
+#     # ground_truth_binary_mask = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+#     #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+#     #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+#     #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+#     #                                      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=np.uint8)
+#
+#     fortran_ground_truth_binary_mask = np.asfortranarray(in_mask.astype(np.uint8))
+#     encoded_ground_truth = cocomask.encode(fortran_ground_truth_binary_mask)
+#     ground_truth_area = cocomask.area(encoded_ground_truth)
+#     ground_truth_bounding_box = cocomask.toBbox(encoded_ground_truth)
+#     contours = measure.find_contours(in_mask, 0.5)
+#     annotation = {
+#         # "id": id,
+#         "segmentation": [],
+#         # "area": ground_truth_area.tolist(),
+#         # "iscrowd": False,
+#         "image_id": int(image_id),
+#         "bbox": np.array(ground_truth_bounding_box.tolist()),
+#         "category_id": 100,
+#         "score": 0.5
+#     }
+#
+#     for contour in contours:
+#         contour = np.flip(contour, axis=1)
+#         segmentation = contour.ravel().tolist()
+#         annotation["segmentation"].append(segmentation)
+#
+#     annotation['segmentation'] = annotation['segmentation']
+#     # print(json.dumps(annotation, indent=4))
+#     return annotation
 
 def calc_coco_metric(targets, outputs):
     annotations_gt = []
