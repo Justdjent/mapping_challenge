@@ -216,67 +216,16 @@ def calc_metric(labels, y_pred):
     print("AP\t-\t-\t-\t{:1.3f}".format(np.mean(prec)))
     return np.mean(prec)
 
-def convert_bin_coco(in_mask, image_id):
-
-    # ground_truth_binary_mask = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-    #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-    #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-    #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-    #                                      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=np.uint8)
-
-    fortran_ground_truth_binary_mask = np.asfortranarray(in_mask.astype(np.uint8))
-    encoded_ground_truth = cocomask.encode(fortran_ground_truth_binary_mask)
-    ground_truth_area = cocomask.area(encoded_ground_truth)
-    ground_truth_bounding_box = cocomask.toBbox(encoded_ground_truth)
-    contours = measure.find_contours(in_mask, 0.5)
-    annotation = {
-        # "id": id,
-        "segmentation": [],
-        # "area": ground_truth_area.tolist(),
-        # "iscrowd": False,
-        "image_id": int(image_id),
-        "bbox": ground_truth_bounding_box.tolist(),
-        "category_id": 100,
-        "score": 0.5
-    }
-
-    for contour in contours:
-        contour = np.flip(contour, axis=1)
-        segmentation = contour.ravel().tolist()
-        annotation["segmentation"].append(segmentation)
-
-    annotation['segmentation'] = annotation['segmentation']
-    # print(json.dumps(annotation, indent=4))
-    return annotation
-
-# def convert_bin_coco_one(in_mask, image_id):
-#
-#     # ground_truth_binary_mask = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-#     #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-#     #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-#     #                                      [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-#     #                                      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     #                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=np.uint8)
-#
-#     fortran_ground_truth_binary_mask = np.asfortranarray(in_mask.astype(np.uint8))
-#     encoded_ground_truth = cocomask.encode(fortran_ground_truth_binary_mask)
-#     ground_truth_area = cocomask.area(encoded_ground_truth)
-#     ground_truth_bounding_box = cocomask.toBbox(encoded_ground_truth)
+# def convert_bin_coco(in_mask, image_id):
+#     fortran_binary_mask = np.asfortranarray(in_mask.astype(np.uint8))
+#     # encoded_ground_truth = maskUtils(fortran_ground_truth_binary_mask)
+#     encoded_ = cocomask.encode(fortran_binary_mask)
+#     ground_truth_bounding_box = cocomask.toBbox(encoded_)
 #     contours = measure.find_contours(in_mask, 0.5)
 #     annotation = {
-#         # "id": id,
 #         "segmentation": [],
-#         # "area": ground_truth_area.tolist(),
-#         # "iscrowd": False,
 #         "image_id": int(image_id),
-#         "bbox": np.array(ground_truth_bounding_box.tolist()),
+#         "bbox": ground_truth_bounding_box.tolist(),
 #         "category_id": 100,
 #         "score": 0.5
 #     }
@@ -287,9 +236,27 @@ def convert_bin_coco(in_mask, image_id):
 #         annotation["segmentation"].append(segmentation)
 #
 #     annotation['segmentation'] = annotation['segmentation']
-#     # print(json.dumps(annotation, indent=4))
 #     return annotation
+def convert_bin_coco(in_mask, image_id):
 
+    # fortran_ground_truth_binary_mask = np.asfortranarray(in_mask.astype(np.uint8))
+    # encoded_ground_truth = cocomask.encode(fortran_ground_truth_binary_mask)
+    contours = measure.find_contours(in_mask, 0.5)
+    annotation = {
+        "segmentation": [],
+        "image_id": image_id,
+        "bbox": [],
+        "category_id": 100,
+        "score": 0.5
+    }
+
+    for contour in contours:
+        contour = np.flip(contour, axis=1)
+        segmentation = contour.ravel().tolist()
+        annotation["segmentation"].append(segmentation)
+        annotation['bbox'].append(bounding_box_from_points(segmentation))
+    # print(json.dumps(annotation, indent=4))
+    return annotation
 def calc_coco_metric(targets, outputs):
     annotations_gt = []
     annotations_r = []
@@ -332,3 +299,16 @@ def save_valid_results(inputs, targets, outputs, idx, epoch):
     plt.imshow(outputs[0][0].data.cpu().numpy(), 'gray')
     plt.savefig('runs/valid_res/{}_{}.jpg'.format(idx, epoch))
     plt.close()
+
+def bounding_box_from_points(points):
+    """
+        This function only supports the `poly` format.
+    """
+    points = np.array(points).flatten()
+    even_locations = np.arange(points.shape[0]/2) * 2
+    odd_locations = even_locations + 1
+    X = np.take(points, even_locations.tolist())
+    Y = np.take(points, odd_locations.tolist())
+    bbox = [X.min(), Y.min(), X.max()-X.min(), Y.max()-Y.min()]
+    bbox = [int(b) for b in bbox]
+    return bbox
