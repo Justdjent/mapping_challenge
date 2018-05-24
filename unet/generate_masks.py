@@ -156,7 +156,7 @@ if __name__ == '__main__':
             predict(model, file_names, args.batch_size, output_path, problem_type=args.problem_type)
             # submit()
     else:
-        file_names = os.listdir("../mapping-challenge-starter-kit/data/test_images")
+        # file_names = os.listdir("../mapping-challenge-starter-kit/data/test_images")
         file_names = os.listdir("../mapping-challenge-starter-kit/data/val/images")
         # file_names = os.listdir('data/stage1_test')
         # _, file_names = get_split(args.fold)
