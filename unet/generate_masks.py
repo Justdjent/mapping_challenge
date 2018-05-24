@@ -116,7 +116,7 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
             anns.append(ann)
 
 
-    fp = open("predictions.json", "w")
+    fp = open("predictions_1.json", "w")
     fp.write(json.dumps(anns))
     fp.close()
 
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     arg('--model_path', type=str, default='runs/debug', help='path to model folder')
     arg('--model_type', type=str, default='UNet11', help='network architecture',
         choices=['UNet', 'UNet11', 'UNet16', 'LinkNet34'])
-    arg('--output_path', type=str, help='path to save images', default='output/mask_test_2')
+    arg('--output_path', type=str, help='path to save images', default='output/val')
     arg('--batch-size', type=int, default=1)
     arg('--fold', type=int, default=0, choices=[0, 1, 2, 3, -1], help='-1: all folds')
     arg('--problem_type', type=str, default='parts', choices=['binary', 'parts', 'instruments'])
@@ -157,6 +157,7 @@ if __name__ == '__main__':
             # submit()
     else:
         file_names = os.listdir("../mapping-challenge-starter-kit/data/test_images")
+        file_names = os.listdir("../mapping-challenge-starter-kit/data/val/images")
         # file_names = os.listdir('data/stage1_test')
         # _, file_names = get_split(args.fold)
         model = get_model(str(Path(args.model_path).joinpath('model_{fold}.pt'.format(fold=args.fold))),

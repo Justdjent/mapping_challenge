@@ -241,6 +241,42 @@ def convert_bin_coco(in_mask, image_id):
     # annotation['segmentation'] = annotation['segmentation']
     return annotation
 
+# def create_annotations(meta, predictions, logger, category_ids, save=True, experiment_dir='./'):
+#     '''
+#     :param meta: pd.DataFrame with metadata
+#     :param predictions: list of labeled masks or numpy array of size [n_images, im_height, im_width]
+#     :param logger:
+#     :param save: True, if one want to save submission, False if one want to return it
+#     :param experiment_dir: path to save submission
+#     :return: submission if save==False else True
+#     '''
+#     annotations = []
+#     logger.info('Creating submission')
+#     for image_id, prediction in zip(meta["ImageId"].values, predictions):
+#         score = 1.0
+#         for category_nr, category_instances in enumerate(prediction):
+#             if category_ids[category_nr] != None:
+#                 masks = decompose(category_instances)
+#                 for mask_nr, mask in enumerate(masks):
+#                     annotation = {}
+#                     annotation["image_id"] = int(image_id)
+#                     annotation["category_id"] = category_ids[category_nr]
+#                     annotation["score"] = score
+#                     annotation["segmentation"] = rle_from_binary(mask.astype('uint8'))
+#                     annotation['segmentation']['counts'] = annotation['segmentation']['counts'].decode("UTF-8")
+#                     annotation["bbox"] = bounding_box_from_rle(rle_from_binary(mask.astype('uint8')))
+#                     annotations.append(annotation)
+#     if save:
+#         submission_filepath = os.path.join(experiment_dir, 'submission.json')
+#         with open(submission_filepath, "w") as fp:
+#             fp.write(str(json.dumps(annotations)))
+#             logger.info("Submission saved to {}".format(submission_filepath))
+#             logger.info('submission head \n\n{}'.format(annotations[0]))
+#         return True
+#     else:
+#         return annotations
+
+
 def create_annotations(meta, predictions, logger, category_ids, save=True, experiment_dir='./'):
     '''
     :param meta: pd.DataFrame with metadata

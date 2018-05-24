@@ -128,7 +128,7 @@ class MapDatasetTest(Dataset):
         # if self.mode == 'valid':
         return len(self.file_names)
         # else:
-        #     return 2
+        # return 1
 
     def __getitem__(self, idx):
 
