@@ -15,7 +15,8 @@ import os
 import matplotlib
 matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import matplotlib.pyplot as plt
-
+import cv2
+from tqdm import tqdm
 import torchvision.utils as vutils
 from tensorboardX import SummaryWriter
 from pycocotools.coco import COCO
@@ -241,40 +242,40 @@ def convert_bin_coco(in_mask, image_id):
     # annotation['segmentation'] = annotation['segmentation']
     return annotation
 
-# def create_annotations(meta, predictions, logger, category_ids, save=True, experiment_dir='./'):
-#     '''
-#     :param meta: pd.DataFrame with metadata
-#     :param predictions: list of labeled masks or numpy array of size [n_images, im_height, im_width]
-#     :param logger:
-#     :param save: True, if one want to save submission, False if one want to return it
-#     :param experiment_dir: path to save submission
-#     :return: submission if save==False else True
-#     '''
-#     annotations = []
-#     logger.info('Creating submission')
-#     for image_id, prediction in zip(meta["ImageId"].values, predictions):
-#         score = 1.0
-#         for category_nr, category_instances in enumerate(prediction):
-#             if category_ids[category_nr] != None:
-#                 masks = decompose(category_instances)
-#                 for mask_nr, mask in enumerate(masks):
-#                     annotation = {}
-#                     annotation["image_id"] = int(image_id)
-#                     annotation["category_id"] = category_ids[category_nr]
-#                     annotation["score"] = score
-#                     annotation["segmentation"] = rle_from_binary(mask.astype('uint8'))
-#                     annotation['segmentation']['counts'] = annotation['segmentation']['counts'].decode("UTF-8")
-#                     annotation["bbox"] = bounding_box_from_rle(rle_from_binary(mask.astype('uint8')))
-#                     annotations.append(annotation)
-#     if save:
-#         submission_filepath = os.path.join(experiment_dir, 'submission.json')
-#         with open(submission_filepath, "w") as fp:
-#             fp.write(str(json.dumps(annotations)))
-#             logger.info("Submission saved to {}".format(submission_filepath))
-#             logger.info('submission head \n\n{}'.format(annotations[0]))
-#         return True
-#     else:
-#         return annotations
+
+def pred_to_coco(preds):
+    """
+
+    :param preds: list og binary masks
+    :return:
+    """
+
+    anns = []
+    kernel = np.ones((5, 5), np.uint8)
+    for pred in tqdm(preds):
+        mask = pred
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        im2, contours, hierarchy = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        cnt_areas = [cv2.contourArea(cnt) for cnt in contours]
+        contours = np.array(contours)[np.array(cnt_areas) > 150]
+        for cnt in range(len(contours)):
+            dr_2 = np.zeros(mask.shape)
+            draw_img = cv2.drawContours(dr_2, contours, cnt, 1, -1)
+            fortran_binary_mask = np.asfortranarray(draw_img.astype(np.uint8))
+            encoded_ = cocomask.encode(fortran_binary_mask)
+            ground_truth_bounding_box = cocomask.toBbox(encoded_)
+            encoded_["counts"] = encoded_["counts"].decode("UTF-8")
+
+            annotation = {
+                "segmentation": encoded_,
+                "image_id": pred['image_id'],  # int(image_id),
+                "bbox": np.around(ground_truth_bounding_box.tolist()).tolist(),
+                "category_id": 100,
+                "score": 1,
+            }
+            anns.append(annotation)
+    return anns
 
 
 def create_annotations(meta, predictions, logger, category_ids, save=True, experiment_dir='./'):
