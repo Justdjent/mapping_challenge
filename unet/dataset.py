@@ -106,7 +106,11 @@ def load_mask(annotations, img):
     #     print('{} was empty'.format(path_))
     # factor = prepare_data.binary_factor
     # mask = cv2.imread(str(path_))
-    # kernel = np.ones((4, 4), np.uint8)
+    # kernel = np.ones((5, 5), np.uint8)
+    mask = mask.astype(np.uint8)
+    kernel = np.ones((5, 5), np.uint8)
+    dilation = cv2.dilate(mask, kernel, iterations=10)
+    mask = dilation - mask
     # seed = cv2.erode(mask[:, :, 0], kernel, iterations=1)
     # border = mask[:, :, 0] - seed
     # mask[:, :, 1] = np.zeros(seed.shape)
@@ -114,7 +118,7 @@ def load_mask(annotations, img):
     # mask[:, :, 2] = np.zeros(seed.shape)
     # mask[:, :, 2] = border
 
-    return mask.astype(np.uint8)
+    return mask
 
 class MapDatasetTest(Dataset):
     def __init__(self, file_names: str, to_augment=False, transform=None, mode='predict', problem_type=None):
