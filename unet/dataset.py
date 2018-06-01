@@ -132,7 +132,7 @@ class MapDatasetTest(Dataset):
         # if self.mode == 'valid':
         return len(self.file_names)
         # else:
-        # return 1
+        # return 10
 
     def __getitem__(self, idx):
 
@@ -148,8 +148,8 @@ class MapDatasetTest(Dataset):
 def load_image_test(img):
     # path_ = "data/stage1_train_/{}/images/{}.png".format(path, path)
         # path_ = "data/stage1_test/{}/images/{}.png".format(path, path)
-    path_ = "../mapping-challenge-starter-kit/data/test_images/{}".format(img)
-    # path_ = "../mapping-challenge-starter-kit/data/val/images/{}".format(img)
+    # path_ = "../mapping-challenge-starter-kit/data/test_images/{}".format(img)
+    path_ = "../mapping-challenge-starter-kit/data/val/images/{}".format(img)
     if not os.path.isfile(path_):
         print('{} was empty'.format(path_))
     I = io.imread(path_)

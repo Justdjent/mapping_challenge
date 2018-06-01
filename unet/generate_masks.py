@@ -56,7 +56,6 @@ def get_model(model_path, model_type='unet11', problem_type='parts'):
     #     model = LinkNet34(num_classes=num_classes)
     # elif model_type == 'UNet':
     model = TernausNet34(num_classes=num_classes)
-
     if torch.cuda.is_available():
         state = torch.load(str(model_path))
     else:
@@ -92,7 +91,11 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
             #     if problem_type == 'binary':
             # factor = prepare_data.binary_factor
             # t_mask = (F.sigmoid(outputs[i, 0]).data.cpu().numpy()).astype(np.uint8)
-            t_mask = (outputs > 0).float()[0][0].data.cpu().numpy()
+            # print(outputs)
+            # t_mask = (outputs > 0).float()[0][0].data.cpu().numpy()
+            t_mask = F.sigmoid(outputs).float()[0][0].data.cpu().numpy()
+            # print(t_mask)
+            # print(np.median(t_mask))
                 # elif problem_type == 'parts':
                 #     # factor = prepare_data.parts_factor
                 #     factor = 255
@@ -106,11 +109,12 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
 
                 # full_mask = np.zeros((original_height, original_width))
                 # full_mask[h_start:h_start + h, w_start:w_start + w] = t_mask
+
             full_mask = cv2.resize(t_mask, (300, 300), cv2.INTER_NEAREST)
             # instrument_folder = Path(paths[i]).parent.parent.name
 
             to_path.mkdir(exist_ok=True, parents=True)
-
+            # print(image_name)
             cv2.imwrite(str(to_path / image_name), (full_mask * 255).astype(np.uint8))
             ann = convert_bin_coco(full_mask, image_name.split('.')[0])
             anns.append(ann)
@@ -132,7 +136,7 @@ if __name__ == '__main__':
     arg('--model_path', type=str, default='runs/debug', help='path to model folder')
     arg('--model_type', type=str, default='UNet11', help='network architecture',
         choices=['UNet', 'UNet11', 'UNet16', 'LinkNet34'])
-    arg('--output_path', type=str, help='path to save images', default='output/')
+    arg('--output_path', type=str, help='path to save images', default='output/val')
     arg('--batch-size', type=int, default=1)
     arg('--fold', type=int, default=0, choices=[0, 1, 2, 3, -1], help='-1: all folds')
     arg('--problem_type', type=str, default='parts', choices=['binary', 'parts', 'instruments'])
@@ -145,7 +149,7 @@ if __name__ == '__main__':
             # _, file_names = get_split(fold)
             file_names = "../mapping-challenge-starter-kit/data/test_images/annotation.json"
             # file_names = os.listdir('data/stage1_test')
-            model = get_model(str(Path(args.model_path).joinpath('best_model_{fold}.pt'.format(fold=fold))),
+            model = get_model(str(args.model_path.joinpath('model_{fold}.pt'.format(fold=fold))),
                               model_type=args.model_type, problem_type=args.problem_type)
 
             print('num file_names = {}'.format(len(file_names)))
@@ -156,11 +160,11 @@ if __name__ == '__main__':
             predict(model, file_names, args.batch_size, output_path, problem_type=args.problem_type)
             # submit()
     else:
-        file_names = os.listdir("../mapping-challenge-starter-kit/data/test_images")
-        # file_names = os.listdir("../mapping-challenge-starter-kit/data/val/images")
+        # file_names = os.listdir("../mapping-challenge-starter-ki-t/data/test_images")
+        file_names = os.listdir("../mapping-challenge-starter-kit/data/val/images")
         # file_names = os.listdir('data/stage1_test')
         # _, file_names = get_split(args.fold)
-        model = get_model(str(Path(args.model_path).joinpath('model_{fold}.pt'.format(fold=args.fold))),
+        model = get_model(str(Path(args.model_path).joinpath('best_model_{fold}.pt'.format(fold=args.fold))),
                           model_type=args.model_type, problem_type=args.problem_type)
 
         print('num file_names = {}'.format(len(file_names)))
