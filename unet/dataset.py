@@ -107,10 +107,10 @@ def load_mask(annotations, img):
     # factor = prepare_data.binary_factor
     # mask = cv2.imread(str(path_))
     # kernel = np.ones((5, 5), np.uint8)
-    mask = mask.astype(np.uint8)
-    kernel = np.ones((5, 5), np.uint8)
-    dilation = cv2.dilate(mask, kernel, iterations=10)
-    mask = dilation - mask
+    # mask = mask.astype(np.uint8)
+    # kernel = np.ones((5, 5), np.uint8)
+    # dilation = cv2.dilate(mask, kernel, iterations=10)
+    # mask = dilation - mask
     # seed = cv2.erode(mask[:, :, 0], kernel, iterations=1)
     # border = mask[:, :, 0] - seed
     # mask[:, :, 1] = np.zeros(seed.shape)
@@ -148,8 +148,8 @@ class MapDatasetTest(Dataset):
 def load_image_test(img):
     # path_ = "data/stage1_train_/{}/images/{}.png".format(path, path)
         # path_ = "data/stage1_test/{}/images/{}.png".format(path, path)
-    # path_ = "../mapping-challenge-starter-kit/data/test_images/{}".format(img)
-    path_ = "../mapping-challenge-starter-kit/data/val/images/{}".format(img)
+    path_ = "../mapping-challenge-starter-kit/data/test_images/{}".format(img)
+    # path_ = "../mapping-challenge-starter-kit/data/val/images/{}".format(img)
     if not os.path.isfile(path_):
         print('{} was empty'.format(path_))
     I = io.imread(path_)

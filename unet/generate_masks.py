@@ -136,7 +136,7 @@ if __name__ == '__main__':
     arg('--model_path', type=str, default='runs/debug', help='path to model folder')
     arg('--model_type', type=str, default='UNet11', help='network architecture',
         choices=['UNet', 'UNet11', 'UNet16', 'LinkNet34'])
-    arg('--output_path', type=str, help='path to save images', default='output/val')
+    arg('--output_path', type=str, help='path to save images', default='output')
     arg('--batch-size', type=int, default=1)
     arg('--fold', type=int, default=0, choices=[0, 1, 2, 3, -1], help='-1: all folds')
     arg('--problem_type', type=str, default='parts', choices=['binary', 'parts', 'instruments'])
@@ -160,8 +160,8 @@ if __name__ == '__main__':
             predict(model, file_names, args.batch_size, output_path, problem_type=args.problem_type)
             # submit()
     else:
-        # file_names = os.listdir("../mapping-challenge-starter-ki-t/data/test_images")
-        file_names = os.listdir("../mapping-challenge-starter-kit/data/val/images")
+        file_names = os.listdir("../mapping-challenge-starter-ki-t/data/test_images")
+        # file_names = os.listdir("../mapping-challenge-starter-kit/data/val/images")
         # file_names = os.listdir('data/stage1_test')
         # _, file_names = get_split(args.fold)
         model = get_model(str(Path(args.model_path).joinpath('best_model_{fold}.pt'.format(fold=args.fold))),
